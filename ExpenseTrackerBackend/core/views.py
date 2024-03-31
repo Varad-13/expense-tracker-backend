@@ -68,7 +68,6 @@ class getCards(APIView):
     def get(self, request):
         data = request.data
         
-
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             cards = Account.objects.filter(device=deviceID)
@@ -88,5 +87,35 @@ class getCards(APIView):
                 })
 
             return Response({'cards': card_data})
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class deleteCard(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def delete(self, request):
+        data = request.data
+
+        try:
+            number = data.get("card_number")
+            cards = Account.objects.get(cardNumber=number)
+            cards.delete()
+            
+            return Response({'message': "Deleted the card"})
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class setLimit(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def put(self, request):
+        data = request.data
+
+        try:
+            number = data.get("card_number")
+            card = Account.objects.get(cardNumber=number)
+            card.limits = data.get("limits")
+            card.save()
+            return Response({'message': "Updated successfully"})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
