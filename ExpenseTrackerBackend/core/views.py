@@ -84,7 +84,9 @@ class getCards(APIView):
                     'limits': card.limits
                 })
 
-            return Response({'cards': card_data})
+            return Response(
+                    card_data
+                )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -171,9 +173,9 @@ class getTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+                transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -210,9 +212,9 @@ class updateTransaction(APIView):
             limit, created = Limit.objects.get_or_create(device = deviceID, card = card)
             amount_changed = data.get("amount")-transaction.amount
             if transaction.credit_debit == "credit":
-                limits.total_earnt += amount_changed
+                limit.total_earnt += amount_changed
             else:
-                limits.total_spent += amount_changed
+                limit.total_spent += amount_changed
             limit.percent_used = ((limit.total_spent-limit.total_earnt)/card.limits)*100
             transaction.amount = data.get("amount")
             limit.save()
@@ -239,9 +241,9 @@ class getDebitTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+                transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -261,9 +263,9 @@ class getCreditTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+                transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -283,9 +285,9 @@ class getCategoryTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+                transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -305,9 +307,9 @@ class getCardTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+                transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -327,9 +329,9 @@ class getCardCategoryTransactions(APIView):
                     'category': t.category,
                     'timestamp': t.timestamp
                 })
-            return Response({
-                'transactions': transaction_data
-            })
+            return Response(
+               transaction_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
@@ -349,8 +351,8 @@ class getLimits(APIView):
                     'total_earnt': t.total_earnt,
                     'percent_used': t.percent_used
                 })
-            return Response({
-                'limits': limit_data
-            })
+            return Response(
+                limit_data
+            )
         except Exception as e:
             return Response({'error': str(e)}, status=400)
