@@ -325,3 +325,25 @@ class getCardCategoryTransactions(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+
+# Limits
+class getLimits(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            limits = Limit.objects.filter(device = deviceID)
+            limit_data = []
+            for t in limits:
+                limit_data.append({
+                    'card': t.card,
+                    'total_spent': t.total_spent,
+                    'total_earnt': t.total_earnt,
+                    'percent_used': t.percent_used
+                })
+            return Response({
+                'limits': limit_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
