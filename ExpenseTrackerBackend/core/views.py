@@ -52,6 +52,7 @@ class addAccount(APIView):
                 'limits': data.get('limits')
             }
             account = Account.objects.create(**card_info)
+            limit = Limits.objects.create(device=device, card=account)
             return Response({
                 'message': 'Account created successfully',
                 'card': data
@@ -114,7 +115,7 @@ class setLimit(APIView):
             limit, created = Limit.objects.get_or_create(device = card.device, card = card)
             card.limits = data.get("limits")
             card.save()
-            limit.percent_used = (limit.total_spent/data.get("limits"))*100
+            limit.percent_used = ((limit.total_spent-limit.total_earnt)/data.get("limits"))*100
             limit.save()
             return Response({'message': "Updated successfully"})
         except Exception as e:
@@ -141,8 +142,11 @@ class addTransaction(APIView):
                 'timestamp': time
             }
             transaction = Transaction.objects.create(**transaction_info)
-            limits.total_spent += request.data.get('amount')
-            limits.percent_used = (float(limits.total_spent)/float(card.limits))*100
+            if request.data.get('credit_debit') == "credit":
+                limits.total_earnt += request.data.get('amount')
+            else:
+                limits.total_spent += request.data.get('amount')
+            limits.percent_used = ((limits.total_spent-limits.total_earnt)/card.limits)*100
             limits.save()
             return Response({
                 'message': 'Transaction created successfully',
@@ -205,8 +209,11 @@ class updateTransaction(APIView):
             card = transaction.card
             limit, created = Limit.objects.get_or_create(device = deviceID, card = card)
             amount_changed = data.get("amount")-transaction.amount
-            limit.total_spent += amount_changed
-            limit.percent_used = (limit.total_spent/card.limits)*100
+            if transaction.credit_debit == "credit":
+                limits.total_earnt += amount_changed
+            else:
+                limits.total_spent += amount_changed
+            limit.percent_used = ((limit.total_spent-limit.total_earnt)/card.limits)*100
             transaction.amount = data.get("amount")
             limit.save()
             transaction.save()
@@ -337,7 +344,7 @@ class getLimits(APIView):
             limit_data = []
             for t in limits:
                 limit_data.append({
-                    'card': t.card,
+                    'card': t.card.cardNumber,
                     'total_spent': t.total_spent,
                     'total_earnt': t.total_earnt,
                     'percent_used': t.percent_used

@@ -19,7 +19,7 @@ urlpatterns = [
     path('api/get-transaction-card/', views.getCardTransactions.as_view(), name='get-transaction-card'),
     path('api/get-transaction-card-category/', views.getCardCategoryTransactions.as_view(), name='get-transaction-card-category'),
     path('api/delete-transaction/', views.deleteTransaction.as_view(), name='get-transaction'),
-    path('api/update-transaction/', views.updateTransaction.as_view(), name='update-transaction')
+    path('api/update-transaction/', views.updateTransaction.as_view(), name='update-transaction'),
     # Limits
-    path('api/get-limit/', views.getLimits.as_view(), name='get-limit')
+    path('api/get-limit/', views.getLimits.as_view(), name='get-limit'),
 ]
