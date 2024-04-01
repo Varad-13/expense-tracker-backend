@@ -181,6 +181,12 @@ class deleteTransaction(APIView):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             transaction = Transaction.objects.get(id = data.get('id'))
+            card = transaction.card
+            limit = Limit.objects.get_or_create(device=deviceID, card=card)
+            transaction_amount = transaction.amount
+            limit.total_spent -= transaction.amount
+            limit.percent_used = (limit.total_spent/card.limits)*100
+            limit.save()
             transaction.delete()
             return Response({
                 'message': "Successfully deleted transaction"
