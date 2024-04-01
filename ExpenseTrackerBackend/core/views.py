@@ -190,7 +190,7 @@ class updateTransaction(APIView):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             transaction = Transaction.objects.get(id = data.get('id'))
-            transaction.limits = data.get("amount")
+            transaction.amount = data.get("amount")
             transaction.save()
             return Response({
                 'message': "Successfully updated"

@@ -19,7 +19,7 @@ class Account(models.Model):
 class Transaction(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE)
     card = models.ForeignKey(Account, on_delete=models.CASCADE)
-    credit_debit = models.CharField(max_length=10)  # Assuming credit/debit is a short string
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Adjust max_digits and decimal_places as needed
+    credit_debit = models.CharField(max_length=10)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
