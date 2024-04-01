@@ -197,3 +197,113 @@ class updateTransaction(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+
+class getDebitTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            transactions = Transaction.objects.filter(device = deviceID, credit_debit="debit")
+            transaction_data = []
+            for t in transactions:
+                transaction_data.append({
+                    'id': t.id,
+                    'credit_debit': t.credit_debit,
+                    'amount': t.amount,
+                    'category': t.category,
+                    'timestamp': t.timestamp
+                })
+            return Response({
+                'transactions': transaction_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class getCreditTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            transactions = Transaction.objects.filter(device = deviceID, credit_debit="credit")
+            transaction_data = []
+            for t in transactions:
+                transaction_data.append({
+                    'id': t.id,
+                    'credit_debit': t.credit_debit,
+                    'amount': t.amount,
+                    'category': t.category,
+                    'timestamp': t.timestamp
+                })
+            return Response({
+                'transactions': transaction_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class getCategoryTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            transactions = Transaction.objects.filter(device = deviceID, category = request.data.get("category"))
+            transaction_data = []
+            for t in transactions:
+                transaction_data.append({
+                    'id': t.id,
+                    'credit_debit': t.credit_debit,
+                    'amount': t.amount,
+                    'category': t.category,
+                    'timestamp': t.timestamp
+                })
+            return Response({
+                'transactions': transaction_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class getCardTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            transactions = Transaction.objects.filter(device = deviceID, card = request.data.get("cardNumber"))
+            transaction_data = []
+            for t in transactions:
+                transaction_data.append({
+                    'id': t.id,
+                    'credit_debit': t.credit_debit,
+                    'amount': t.amount,
+                    'category': t.category,
+                    'timestamp': t.timestamp
+                })
+            return Response({
+                'transactions': transaction_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class getCardCategoryTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            transactions = Transaction.objects.filter(device = deviceID, category = request.data.get("category"), card = request.data.get("cardNumber"))
+            transaction_data = []
+            for t in transactions:
+                transaction_data.append({
+                    'id': t.id,
+                    'credit_debit': t.credit_debit,
+                    'amount': t.amount,
+                    'category': t.category,
+                    'timestamp': t.timestamp
+                })
+            return Response({
+                'transactions': transaction_data
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
