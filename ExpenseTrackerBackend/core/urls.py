@@ -13,11 +13,11 @@ urlpatterns = [
     # Transaction Paths
     path('api/add-transaction/', views.addTransaction.as_view(), name='add-transaction'),
     path('api/get-transactions/', views.getTransactions.as_view(), name='get-transaction'),
-    path('api/get-debit/', views.getDebitTransactions.as_view(), name='get-debit'),
-    path('api/get-credit/', views.getCreditTransactions.as_view(), name='get-credit'),
-    path('api/get-category/', views.getCategoryTransactions.as_view(), name='get-category'),
-    path('api/get-card/', views.getCardTransactions.as_view(), name='get-card'),
-    path('api/get-card-category/', views.getCardCategoryTransactions.as_view(), name='get-card-category'),
+    path('api/get-transaction-debit/', views.getDebitTransactions.as_view(), name='get-transaction-debit'),
+    path('api/get-transaction-credit/', views.getCreditTransactions.as_view(), name='get-transaction-credit'),
+    path('api/get-transaction-category/', views.getCategoryTransactions.as_view(), name='get-transaction-category'),
+    path('api/get-transaction-card/', views.getCardTransactions.as_view(), name='get-transaction-card'),
+    path('api/get-transaction-card-category/', views.getCardCategoryTransactions.as_view(), name='get-transaction-card-category'),
     path('api/delete-transaction/', views.deleteTransaction.as_view(), name='get-transaction'),
     path('api/update-transaction/', views.updateTransaction.as_view(), name='update-transaction')
 ]
