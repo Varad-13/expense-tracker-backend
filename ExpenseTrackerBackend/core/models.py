@@ -24,9 +24,9 @@ class Transaction(models.Model):
     category = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-class Limits(models.Model):
+class Limit(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE)
-    card = models.ForeignKey(Account, on_delete=models.CASCADE)
-    total_spent = models.DecimalField(max_digits=10, decimal_places=2)
-    total_earnt = models.DecimalField(max_digits=10, decimal_places=2)
-    percent_used = models.IntegerField()
+    card = models.OneToOneField(Account, on_delete=models.CASCADE, unique=True)
+    total_spent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_earnt = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    percent_used = models.DecimalField(max_digits=10, decimal_places=2, default=0)

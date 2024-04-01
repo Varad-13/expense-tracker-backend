@@ -1,4 +1,4 @@
-from .models import Device, Account, Transaction
+from .models import Device, Account, Transaction, Limit
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .authentication import DeviceIDAuthentication
@@ -111,8 +111,11 @@ class setLimit(APIView):
         try:
             number = data.get("card_number")
             card = Account.objects.get(cardNumber=number)
+            limit, created = Limit.objects.get_or_create(device = card.device, card = card)
             card.limits = data.get("limits")
             card.save()
+            limit.percent_used = (limit.total_spent/data.get("limits"))*100
+            limit.save()
             return Response({'message': "Updated successfully"})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
@@ -124,10 +127,10 @@ class addTransaction(APIView):
 
     def post(self, request):
         data = request.data
-        print(data)
         try:
             device = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             card = Account.objects.get(cardNumber = request.data.get('card_number'))
+            limits, created = Limit.objects.get_or_create(device=device, card=card)
             time = timezone.now()
             transaction_info = {
                 'device': device,
@@ -138,9 +141,12 @@ class addTransaction(APIView):
                 'timestamp': time
             }
             transaction = Transaction.objects.create(**transaction_info)
+            limits.total_spent += request.data.get('amount')
+            limits.percent_used = (float(limits.total_spent)/float(card.limits))*100
+            limits.save()
             return Response({
                 'message': 'Transaction created successfully',
-                'transaction': data
+                'transaction': data,
             })
         except Exception as e:
             return Response({'error': str(e)}, status=400)
@@ -190,7 +196,13 @@ class updateTransaction(APIView):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             transaction = Transaction.objects.get(id = data.get('id'))
+            card = transaction.card
+            limit, created = Limit.objects.get_or_create(device = deviceID, card = card)
+            amount_changed = data.get("amount")-transaction.amount
+            limit.total_spent += amount_changed
+            limit.percent_used = (limit.total_spent/card.limits)*100
             transaction.amount = data.get("amount")
+            limit.save()
             transaction.save()
             return Response({
                 'message': "Successfully updated"
