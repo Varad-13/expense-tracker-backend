@@ -52,7 +52,7 @@ class addAccount(APIView):
                 'limits': data.get('limits')
             }
             account = Account.objects.create(**card_info)
-            limit = Limits.objects.create(device=device, card=account)
+            limit = Limit.objects.create(device=device, card=account)
             return Response({
                 'message': 'Account created successfully',
                 'card': data
@@ -343,16 +343,39 @@ class getLimits(APIView):
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             limits = Limit.objects.filter(device = deviceID)
             limit_data = []
+            expense = 0
+            total_limit = 0
             for t in limits:
                 limit_data.append({
-                    'card': t.card.cardNumber,
+                    'card': t.card.nickname,
                     'total_spent': t.total_spent,
                     'total_earnt': t.total_earnt,
-                    'percent_used': t.percent_used
+                    'percent_used': t.percent_used,
+                    'fractional_percent': t.percent_used/100
                 })
             return Response(
                 limit_data
             )
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class getTotalLimits(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            limits = Limit.objects.filter(device = deviceID)
+            limit_data = []
+            expense = 0
+            total_limit = 0
+            for t in limits:
+                expense += t.total_spent-t.total_earnt
+                total_limit += t.card.limits
+            return Response({
+                'expense': expense, 
+                'limit': total_limit
+            })
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 

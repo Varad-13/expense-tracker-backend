@@ -15,7 +15,6 @@ class DeviceIDAuthentication(BaseAuthentication):
         except Device.DoesNotExist:
             # Device ID not found, create a new device
             device = Device.objects.create(deviceID=device_id)
-        
         device.last_login = timezone.now()  # Update last_login on authentication
         device.save()
         return (device, None)
