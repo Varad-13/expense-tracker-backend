@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from .authentication import DeviceIDAuthentication
 from django.utils import timezone
 
+#General
 class TestLogin(APIView):
     authentication_classes = [DeviceIDAuthentication]
 
@@ -12,6 +13,25 @@ class TestLogin(APIView):
         # Only authenticated requests will reach here
         return Response({"last_login":device.last_login})
 
+class deleteUserData(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def delete(self, request):
+        try:
+            device = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            if request.data.get("api_key") == "101928383":
+                device.delete()
+                return Response({
+                    "message": "Deleted"
+                })
+            else:
+                return Response({
+                    "message": "wrong api key"
+                })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+# Cards
 class addAccount(APIView):
     authentication_classes = [DeviceIDAuthentication]
 
@@ -97,6 +117,8 @@ class setLimit(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=400)
 
+
+# Transactions
 class addTransaction(APIView):
     authentication_classes = [DeviceIDAuthentication]
 
