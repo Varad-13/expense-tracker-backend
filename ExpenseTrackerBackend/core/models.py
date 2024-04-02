@@ -24,6 +24,9 @@ class Transaction(models.Model):
     category = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-timestamp']
+
 class Limit(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE)
     card = models.OneToOneField(Account, on_delete=models.CASCADE, unique=True)

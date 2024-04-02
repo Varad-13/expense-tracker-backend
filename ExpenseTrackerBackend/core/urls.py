@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/get-limit/', views.getLimits.as_view(), name='get-limit'),
     path('api/get-total-limit/', views.getTotalLimits.as_view(), name='get-total-limit'),
     path('api/get-limit-card/', views.getLimitsCard.as_view(), name='get-limit-card'),
+    path('api/reset-limit/', views.resetLimit.as_view(), name='reset-limit'),
 ]

@@ -110,7 +110,6 @@ class setLimit(APIView):
 
     def put(self, request):
         data = request.data
-
         try:
             number = data.get("card_number")
             card = Account.objects.get(cardNumber=number)
@@ -187,11 +186,11 @@ class deleteTransaction(APIView):
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             transaction = Transaction.objects.get(id = data.get('id'))
             card = transaction.card
-            limit = Limit.objects.get_or_create(device=deviceID, card=card)
+            #limit = Limit.objects.get_or_create(device=deviceID, card=card)
             transaction_amount = transaction.amount
-            limit.total_spent -= transaction.amount
-            limit.percent_used = (limit.total_spent/card.limits)*100
-            limit.save()
+            #limit.total_spent -= transaction.amount
+            #limit.percent_used = (limit.total_spent/card.limits)*100
+            #limit.save()
             transaction.delete()
             return Response({
                 'message': "Successfully deleted transaction"
@@ -235,6 +234,7 @@ class getDebitTransactions(APIView):
             for t in transactions:
                 transaction_data.append({
                     'id': t.id,
+                    'card': t.card.nickname,
                     'credit_debit': t.credit_debit,
                     'amount': t.amount,
                     'category': t.category,
@@ -343,15 +343,15 @@ class getLimits(APIView):
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
             limits = Limit.objects.filter(device = deviceID)
             limit_data = []
-            expense = 0
-            total_limit = 0
             for t in limits:
+                print(t.percent_used)
+                t.percent_used = t.percent_used if t.percent_used<100 else 100
                 limit_data.append({
                     'card': t.card.nickname,
                     'total_spent': t.total_spent,
                     'total_earnt': t.total_earnt,
                     'percent_used': t.percent_used,
-                    'fractional_percent': t.percent_used/100
+                    'fractional_percent': t.percent_used/100 if t.percent_used>0 else 0
                 })
             return Response(
                 limit_data
@@ -370,11 +370,16 @@ class getTotalLimits(APIView):
             expense = 0
             total_limit = 0
             for t in limits:
-                expense += t.total_spent-t.total_earnt
+                expense += t.total_spent-t.total_earnt 
                 total_limit += t.card.limits
+            total_limit = total_limit if expense > 0 else total_limit-expense
+            expense = expense if expense>0 else 0
+            print(expense, total_limit)
+            percentage = round((expense/total_limit)*100)
             return Response({
                 'expense': expense, 
-                'limit': total_limit
+                'limit': total_limit,
+                'percentage': percentage
             })
         except Exception as e:
             return Response({'error': str(e)}, status=400)
@@ -400,3 +405,18 @@ class getLimitsCard(APIView):
             )
         except Exception as e:
             return Response({'error': str(e)}, status=400)     
+
+class resetLimit(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def delete(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            limits = Limit.objects.filter(device = deviceID)
+            for limit in limits:
+                limit.delete()
+                print(limit)
+                limit.save()
+            return Response({"message": "Deleted"})
+        except Exception as e:
+            return Response({'error': str(e)}, status=400) 
