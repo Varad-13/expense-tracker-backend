@@ -166,6 +166,7 @@ class getTransactions(APIView):
             for t in transactions:
                 transaction_data.append({
                     'id': t.id,
+                    'card': t.card.nickname,
                     'credit_debit': t.credit_debit,
                     'amount': t.amount,
                     'category': t.category,
@@ -344,7 +345,6 @@ class getLimits(APIView):
             limits = Limit.objects.filter(device = deviceID)
             limit_data = []
             for t in limits:
-                print(t.percent_used)
                 t.percent_used = t.percent_used if t.percent_used<100 else 100
                 limit_data.append({
                     'card': t.card.nickname,
@@ -374,7 +374,6 @@ class getTotalLimits(APIView):
                 total_limit += t.card.limits
             total_limit = total_limit if expense > 0 else total_limit-expense
             expense = expense if expense>0 else 0
-            print(expense, total_limit)
             percentage = round((expense/total_limit)*100)
             return Response({
                 'expense': expense, 
@@ -415,8 +414,30 @@ class resetLimit(APIView):
             limits = Limit.objects.filter(device = deviceID)
             for limit in limits:
                 limit.delete()
-                print(limit)
                 limit.save()
             return Response({"message": "Deleted"})
+        except Exception as e:
+            return Response({'error': str(e)}, status=400) 
+
+class getCreditDebit(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def get(self, request):
+        try:
+            deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            print(request)
+            creditTransactions = Transaction.objects.filter(device = deviceID, credit_debit="credit")
+            debitTransactions = Transaction.objects.filter(device = deviceID, credit_debit="debit")
+            credit = 0
+            debit = 0
+            for creditT in creditTransactions:
+                credit += creditT.amount
+            for debitT in debitTransactions:
+                debit += debitT.amount
+    
+            return Response({
+                "incoming": credit,
+                "expense": debit
+            })
         except Exception as e:
             return Response({'error': str(e)}, status=400) 
