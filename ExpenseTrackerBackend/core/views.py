@@ -144,7 +144,7 @@ class addTransaction(APIView):
                 'credit_debit': request.data.get('credit_debit'),
                 'amount': request.data.get('amount'),
                 'category': request.data.get('category'),
-                'timestamp': request.data.get('timestamp')
+                'timestamp': request.data.get('timestamp') or time
             }
             print(time)
             transaction = Transaction.objects.create(**transaction_info)
