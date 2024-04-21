@@ -25,7 +25,7 @@ current_date = start_date
 while current_date <= end_date:
     for card_number, limit in cards.items():
         for i in range(0, random.randint(1, 3)):
-            credit_debit = "debit" if random.random() < 0.9 else "credit"  # 80% chance of debit
+            credit_debit = "debit" if random.random() < 1 else "credit"  # 80% chance of debit
             amount = random.randint(100, 1000) if credit_debit == "credit" else random.randint(50, 500)
             category = random.choices(debit_categories if credit_debit == "debit" else credit_categories,
                                       weights=debit_weights if credit_debit == "debit" else credit_weights)[0]
