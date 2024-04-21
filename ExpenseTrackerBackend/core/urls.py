@@ -19,11 +19,12 @@ urlpatterns = [
     path('api/get-transaction-card/', views.getCardTransactions.as_view(), name='get-transaction-card'),
     path('api/get-transaction-card-category/', views.getCardCategoryTransactions.as_view(), name='get-transaction-card-category'),
     path('api/delete-transaction/', views.deleteTransaction.as_view(), name='get-transaction'),
+    path('api/delete-all-transaction/', views.deleteAllTransactions.as_view(), name='get-transaction'),
     path('api/update-transaction/', views.updateTransaction.as_view(), name='update-transaction'),
     # Limits
     path('api/get-limit/', views.getLimits.as_view(), name='get-limit'),
     path('api/get-total-limit/', views.getTotalLimits.as_view(), name='get-total-limit'),
     path('api/get-limit-card/', views.getLimitsCard.as_view(), name='get-limit-card'),
     path('api/reset-limit/', views.resetLimit.as_view(), name='reset-limit'),
-    path('api/get-income-expense/', views.getCreditDebit.as_view(), name='get-income-expense')
+    path('api/get-income-expense/', views.getCreditDebit.as_view(), name='get-income-expense'),
 ]

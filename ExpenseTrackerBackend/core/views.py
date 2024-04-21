@@ -133,14 +133,16 @@ class addTransaction(APIView):
             card = Account.objects.get(cardNumber = request.data.get('card_number'))
             limits, created = Limit.objects.get_or_create(device=device, card=card)
             time = timezone.now()
+            print(request.data.get('timestamp'))
             transaction_info = {
                 'device': device,
                 'card': card,
                 'credit_debit': request.data.get('credit_debit'),
                 'amount': request.data.get('amount'),
                 'category': request.data.get('category'),
-                'timestamp': time
+                'timestamp': request.data.get('timestamp')
             }
+            print(time)
             transaction = Transaction.objects.create(**transaction_info)
             if request.data.get('credit_debit') == "credit":
                 limits.total_earnt += request.data.get('amount')
@@ -153,6 +155,7 @@ class addTransaction(APIView):
                 'transaction': data,
             })
         except Exception as e:
+            print(e)
             return Response({'error': str(e)}, status=400)
 
 class getTransactions(APIView):
@@ -193,6 +196,21 @@ class deleteTransaction(APIView):
             #limit.percent_used = (limit.total_spent/card.limits)*100
             #limit.save()
             transaction.delete()
+            return Response({
+                'message': "Successfully deleted transaction"
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+class deleteAllTransactions(APIView):
+    authentication_classes = [DeviceIDAuthentication]
+
+    def delete(self, request):
+        data = request.data
+        try:
+            transactions = Transaction.objects.all()
+            for transaction in transactions:
+                transaction.delete()
             return Response({
                 'message': "Successfully deleted transaction"
             })
@@ -293,12 +311,13 @@ class getCategoryTransactions(APIView):
 
 class getCardTransactions(APIView):
     authentication_classes = [DeviceIDAuthentication]
-
-    def get(self, request):
+    
+    def post(self, request):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
-            transactions = Transaction.objects.filter(device = deviceID, card = request.data.get("cardNumber"))
+            transactions = Transaction.objects.filter(card = request.data.get("cardNumber"))
             transaction_data = []
+            
             for t in transactions:
                 transaction_data.append({
                     'id': t.id,
@@ -365,6 +384,7 @@ class getTotalLimits(APIView):
     def get(self, request):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            print(request.META.get('HTTP_DEVICEID'))
             limits = Limit.objects.filter(device = deviceID)
             limit_data = []
             expense = 0
@@ -374,7 +394,7 @@ class getTotalLimits(APIView):
                 total_limit += t.card.limits
             total_limit = total_limit if expense > 0 else total_limit-expense
             expense = expense if expense>0 else 0
-            percentage = round((expense/total_limit)*100)
+            percentage = round((expense/total_limit)*100) if total_limit>0 else 0
             return Response({
                 'expense': expense, 
                 'limit': total_limit,
