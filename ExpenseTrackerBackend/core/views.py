@@ -3,6 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .authentication import DeviceIDAuthentication
 from django.utils import timezone
+from django.shortcuts import render
+from django.db.models import Sum, Count
+import json
+from decimal import Decimal
 
 #General
 class TestLogin(APIView):
@@ -461,3 +465,43 @@ class getCreditDebit(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=400) 
+
+def device_analytics(request, device_id):
+    # Get the device object
+    device = Device.objects.get(deviceID=device_id)
+
+    # Get transactions related to the device
+    transactions = Transaction.objects.filter(device=device)
+
+    # Calculate top spending category
+    top_spending_category = transactions.values('category').annotate(total_spent=Sum('amount')).order_by('-total_spent').first()
+
+    # Calculate top earning category
+    top_earning_category = Transaction.objects.filter(device=device, credit_debit='credit').values('category').annotate(total_earned=Sum('amount')).order_by('-total_earned').first()
+
+    # Calculate most earned and most spent account
+    most_earned_account = Transaction.objects.filter(device=device, credit_debit='credit').values('card__cardNumber', 'card__holderName').annotate(total_earned=Sum('amount')).order_by('-total_earned').first()
+    most_spent_account = transactions.values('card__cardNumber', 'card__holderName').annotate(total_spent=Sum('amount')).order_by('-total_spent').first()
+
+    # Calculate most spent day
+    most_spent_day = transactions.values('timestamp__date').annotate(total_spent=Sum('amount')).order_by('-total_spent').first()
+
+    # Calculate spending trends by category
+    spending_trends_by_category = transactions.values('category').filter(credit_debit="debit").annotate(total_spent=Sum('amount')).order_by('-total_spent')
+
+    # Prepare data for chart (Chart.js)
+    chart_labels = [trend['category'] for trend in spending_trends_by_category]
+    chart_data = [trend['total_spent'] for trend in spending_trends_by_category]
+    chart_labels_json = json.dumps(chart_labels)
+    chart_data_json = json.dumps([float(data['total_spent']) for data in spending_trends_by_category])
+    # Render the template with analytics data
+    return render(request, 'analytics.html', {
+        'device': device,
+        'top_spending_category': top_spending_category,
+        'top_earning_category': top_earning_category,
+        'most_earned_account': most_earned_account,
+        'most_spent_account': most_spent_account,
+        'most_spent_day': most_spent_day,
+        'chart_labels_json': chart_labels_json,
+        'chart_data_json': chart_data_json,
+    })

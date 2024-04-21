@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Analytics</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Device Analytics</h1>
+    <h2>Device Information</h2>
+    <p>Device ID: {{ device.deviceID }}</p>
+    <!-- Display other device information here as needed -->
+
+    <h2>Top Spending Category</h2>
+    {% if top_spending_category %}
+        <p>Category: {{ top_spending_category.category }}</p>
+        <p>Total Spent: ${{ top_spending_category.total_spent }}</p>
+    {% else %}
+        <p>No spending data available.</p>
+    {% endif %}
+
+    <h2>Top Earning Category</h2>
+    {% if top_earning_category %}
+        <p>Category: {{ top_earning_category.category }}</p>
+        <p>Total Earned: ${{ top_earning_category.total_earned }}</p>
+    {% else %}
+        <p>No earning data available.</p>
+    {% endif %}
+
+    <h2>Most Earned Account</h2>
+    {% if most_earned_account %}
+        <p>Card Number: {{ most_earned_account.card__cardNumber }}</p>
+        <p>Holder Name: {{ most_earned_account.card__holderName }}</p>
+        <p>Total Earned: ${{ most_earned_account.total_earned }}</p>
+    {% else %}
+        <p>No earning data available.</p>
+    {% endif %}
+
+    <h2>Most Spent Account</h2>
+    {% if most_spent_account %}
+        <p>Card Number: {{ most_spent_account.card__cardNumber }}</p>
+        <p>Holder Name: {{ most_spent_account.card__holderName }}</p>
+        <p>Total Spent: ${{ most_spent_account.total_spent }}</p>
+    {% else %}
+        <p>No spending data available.</p>
+    {% endif %}
+
+    <h2>Most Spent Day</h2>
+    {% if most_spent_day %}
+        <p>Date: {{ most_spent_day.timestamp__date }}</p>
+        <p>Total Spent: ${{ most_spent_day.total_spent }}</p>
+    {% else %}
+        <p>No spending data available.</p>
+    {% endif %}
+
+    <h2>Spending Trends by Category</h2>
+    <canvas id="spendingChart" width="400" height="200"></canvas>
+
+    <script>
+        var chart_labels = JSON.parse('{{ chart_labels_json|escapejs }}');
+        var chart_data = JSON.parse('{{ chart_data_json|escapejs }}');
+    
+        var ctx = document.getElementById('spendingChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chart_labels,
+                datasets: [{
+                    label: 'Total Spent',
+                    data: chart_data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+    
+</body>
+</html>

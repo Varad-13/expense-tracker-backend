@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/get-limit-card/', views.getLimitsCard.as_view(), name='get-limit-card'),
     path('api/reset-limit/', views.resetLimit.as_view(), name='reset-limit'),
     path('api/get-income-expense/', views.getCreditDebit.as_view(), name='get-income-expense'),
+    path('analytics/<str:device_id>/', views.device_analytics, name='device_analytics'),
 ]

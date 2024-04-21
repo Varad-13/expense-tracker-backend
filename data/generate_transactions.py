@@ -44,7 +44,7 @@ while current_date <= end_date:
             }
             
             # Make a POST request to API URL with headers and body
-            api_url = "http://localhost:8000/api/add-transaction/"
+            api_url = "http://35.154.235.185:8000/api/add-transaction/"
             device_id = "faba38ac14dffec8"
             headers = {"DEVICEID": device_id}
             response = requests.post(api_url, headers=headers, json=entry)
