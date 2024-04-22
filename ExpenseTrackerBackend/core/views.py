@@ -449,6 +449,15 @@ class getCreditDebit(APIView):
     def get(self, request):
         try:
             deviceID = Device.objects.get(deviceID = request.META.get('HTTP_DEVICEID'))
+            limits = Limit.objects.filter(device = deviceID)
+            expense = 0
+            total_limit = 0
+            for t in limits:
+                expense += t.total_spent-t.total_earnt 
+                total_limit += t.card.limits
+            total_limit = total_limit if expense > 0 else total_limit-expense
+            expense = expense if expense>0 else 0
+            saving = total_limit - expense
             print(request)
             creditTransactions = Transaction.objects.filter(device = deviceID, credit_debit="credit")
             debitTransactions = Transaction.objects.filter(device = deviceID, credit_debit="debit")
@@ -460,7 +469,7 @@ class getCreditDebit(APIView):
                 debit += debitT.amount
     
             return Response({
-                "incoming": credit,
+                "incoming": saving,
                 "expense": debit
             })
         except Exception as e:
