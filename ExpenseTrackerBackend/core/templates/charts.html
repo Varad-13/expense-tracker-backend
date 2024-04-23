@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/simpleheat@0.8.1/dist/simpleheat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
+
+        
+    <style>
+        /* Adjust canvas size to fit the page */
+        body{
+            background-color: rgb(210, 210, 210);
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Horizontally center */
+            align-items: center; /* Vertically center */
+            margin-top: 20px; /* Add some space at the top */
+        }
+        .topbar {
+            background-color: #333; /* Background color */
+            color: #fff; /* Text color */
+            padding: 10px 20px; /* Padding */
+            display: flex; /* Flexbox for alignment */
+            justify-content: space-between; /* Space between items */
+            align-items: center; /* Center vertically */
+            margin: 0; /* Remove default margin */
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>Analytics Dashboard</h1>
+    </div>
+    <div class="container">
+        <h3>Daily Spending</h3>
+    </div>
+    <div class="container">
+        <canvas id="dailySummationChart"></canvas>
+    </div>
+    <div id="heatmapContainer" class="container">
+        <h3>Daily Expenses Heatmap</h3>
+        <canvas id="heatmapChart"></canvas>
+    </div>
+    <div class="container">
+        <h3>Spending Categories</h3>
+    </div>
+    <div class="container">
+        <canvas id="categoryChart"></canvas>
+    </div>
+    <div class="container">
+        <h3>Card Expenses</h3>
+    </div>
+    <div class="container">
+        <canvas id="accountOverviewChart"></canvas>
+    </div>
+
+    <!-- JavaScript to render charts -->
+    <script>
+        // Parse JSON data from Django context
+        var dailySummationData = JSON.parse('{{ daily_summation_json|escapejs }}');
+        var categoryData = JSON.parse('{{ category_data_json|escapejs }}');
+        var heatmapData = JSON.parse('{{ daily_heatmap_json|escapejs }}');
+        var accountData = JSON.parse('{{ account_data_json|escapejs }}');
+
+        // Create Daily Summation Chart
+        var ctxDailySummation = document.getElementById('dailySummationChart').getContext('2d');
+        var dailySummationChart = new Chart(ctxDailySummation, {
+            type: 'line',
+            data: {
+                labels: dailySummationData.dates,
+                datasets: [{
+                    label: 'Daily Expenses',
+                    data: dailySummationData.amounts,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Create Transaction Categories Chart
+        var ctxCategory = document.getElementById('categoryChart').getContext('2d');
+        var categoryChart = new Chart(ctxCategory, {
+            type: 'pie',
+            data: {
+                labels: categoryData.categories,
+                datasets: [{
+                    data: categoryData.amounts,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(100, 100, 100, 0.8)',
+                        'rgba(200, 200, 200, 0.8)',
+                        'rgba(50, 50, 50, 0.8)'
+                    ],
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true
+            }
+        });
+
+        // Create Account Overview Chart
+        var ctxAccountOverview = document.getElementById('accountOverviewChart').getContext('2d');
+        var accountOverviewChart = new Chart(ctxAccountOverview, {
+            type: 'bar',
+            data: {
+                labels: accountData.map(function (account) {
+                    return account.nickname;
+                }),
+                datasets: [{
+                    label: 'Account Limits',
+                    data: accountData.map(function (account) {
+                        return account.limits;
+                    }),
+                    backgroundColor: 'rgba(255, 159, 64, 0.8)',
+                    borderWidth: 1
+                }, {
+                    label: 'Total Spend',
+                    data: accountData.map(function (account) {
+                        return account.total_spent;
+                    }),
+                    backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Create Heatmap using chartjs-chart-matrix plugin
+        var ctxHeatmap = document.getElementById('heatmapChart').getContext('2d');
+        var heatmapChart = new Chart(ctxHeatmap, {
+            type: 'matrix',
+            data: {
+                datasets: [{
+                    data: heatmapData,
+                    backgroundColor: function(context) {
+                        var value = context.dataset.data[context.dataIndex].val;
+                        return value > 0 ? 'rgba(0, 128, 0, ' + (value / 3000) + ')' : 'rgba(255, 0, 0, 0.1)';
+                    },
+                    hoverBackgroundColor: function(context) {
+                        return 'rgba(0, 0, 0, 0.7)';
+                    },
+                    
+                    borderWidth: 0,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: false,
+                    tooltip: {
+                        callbacks: {
+                        title() {
+                            return '';
+                        },
+                        label(context) {
+                            const v = context.dataset.data[context.dataIndex];
+                            console.log(v.x_label)
+                            return ['Date: ' + v.x_label, 'Day: ' + v.y_label, 'Amount: ' + v.v_label];
+                        },
+                        }   
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false,
+                        ticks: {
+                        stepSize: 1
+                        },
+                        grid: {
+                        display: false
+                        },
+                    },
+                    y: {
+                        display: false,
+                        offset: true,
+                        ticks: {
+                        stepSize: 1
+                        },
+                        grid: {
+                        display: false
+                        },
+                    }
+                },
+                
+            }
+        });
+    </script>
+</body>
+</html>

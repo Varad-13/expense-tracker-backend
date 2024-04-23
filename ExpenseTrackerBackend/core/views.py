@@ -1,12 +1,16 @@
 from .models import Device, Account, Transaction, Limit
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import HttpResponse
 from .authentication import DeviceIDAuthentication
 from django.utils import timezone
 from django.shortcuts import render
 from django.db.models import Sum, Count
 import json
+from django.core.serializers.json import DjangoJSONEncoder  # Import Django's JSON encoder
 from decimal import Decimal
+from datetime import datetime, timedelta
+from django.db.models.functions import TruncDay  # Import TruncDay function
 
 #General
 class TestLogin(APIView):
@@ -469,6 +473,7 @@ class getCreditDebit(APIView):
                 debit += debitT.amount
     
             return Response({
+                "credit": credit,
                 "incoming": saving,
                 "expense": debit
             })
@@ -514,3 +519,87 @@ def device_analytics(request, device_id):
         'chart_labels_json': chart_labels_json,
         'chart_data_json': chart_data_json,
     })
+
+def analytics_view(request, device_id):
+    try:
+        device = Device.objects.get(deviceID=device_id)
+    except Device.DoesNotExist:
+        return HttpResponse("Device not found", status=404)
+
+    # Calculate the date 30 days ago from today in UTC
+    thirty_days_ago = timezone.now() - timedelta(days=60)
+
+    # Filter transactions to include only those from the past 30 days
+    spending = Transaction.objects.filter(device=device, credit_debit="debit", timestamp__gte=thirty_days_ago)
+
+    # Calculate daily summation of transaction amounts
+    daily_summation = spending.values('timestamp__date').annotate(total_amount=Sum('amount'))
+
+    # Convert daily summation data to JSON format
+    daily_summation_data = {
+        'dates': [date['timestamp__date'].strftime('%d/%m') for date in daily_summation],
+        'amounts': [float(item['total_amount']) for item in daily_summation],
+    }
+
+    # Pie chart showing the distribution of transaction categories
+    category_counts = spending.values('category').annotate(total_amount=Sum('amount'))
+    categories = [item['category'] for item in category_counts]
+    amounts = [float(item['total_amount']) for item in category_counts]  # Convert to floats
+
+    # Convert data to JSON format for pie chart
+    category_data = {
+        'categories': categories,
+        'amounts': amounts,
+    }
+
+    heatmap_data = spending.annotate(day=TruncDay('timestamp')).values('day').annotate(total_amount=Sum('amount'))
+    daily_heatmap_data = []
+
+    # Iterate through each item in heatmap_data
+    daily_heatmap_data = []
+
+    # Set coordinates for the heatmap instead of dates and days
+    y_coord = 0
+    x_coord = 0
+    x_inc = 0
+    for item in heatmap_data:
+        day_date = item['day']
+        x_label = day_date.strftime('%m-%d')
+        y_label = day_date.strftime('%A')
+        total_amount = float(item['total_amount'])
+        v_label = total_amount
+        # Get the total amount and set the y coordinate
+        
+        # Append the data point to daily_heatmap_data
+        daily_heatmap_data.append({'x': x_coord, 'y': y_coord, 'val': total_amount, 'x_label': x_label, 'y_label': y_label, "v_label": v_label})
+        y_coord += 1  # Increment x coordinate
+        y_coord = y_coord % 7
+        x_inc += 1
+        if(x_inc%7 == 0):
+            x_coord += 1
+
+    # Calculate account overview data from models
+    accounts = Account.objects.filter(device=device)
+    account_data = []
+    for account in accounts:
+        total_spent = float(spending.filter(card=account).aggregate(total=Sum('amount'))['total'] or 0)
+        account_info = {
+            'nickname': account.nickname,
+            'limits': account.limits,
+            'total_spent': total_spent,
+            'cardType': account.cardType,
+        }
+        account_data.append(account_info)
+    # Serialize JSON data using Django's JSON encoder
+    daily_summation_json = json.dumps(daily_summation_data, cls=DjangoJSONEncoder)
+    category_data_json = json.dumps(category_data, cls=DjangoJSONEncoder)
+    daily_heatmap_json = json.dumps(daily_heatmap_data, cls=DjangoJSONEncoder)
+    account_data_json = json.dumps(account_data, cls=DjangoJSONEncoder)
+    # Pass the JSON data to the template
+    context = {
+        'daily_summation_json': daily_summation_json,
+        'category_data_json': category_data_json,
+        'daily_heatmap_json': daily_heatmap_json,
+        'account_data_json': account_data_json,  # Include account overview data
+    }
+    return render(request, 'charts.html', context)
